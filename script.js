@@ -12,6 +12,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
         approved = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+        if (!Array.isArray(approved)) {
+            approved = [];
+        }
     } catch (e) {
         approved = [];
     }
@@ -37,6 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ===== VALIDAR PRERREQUISITOS =====
     function isUnlocked(course) {
+
         if (!course.prereq || course.prereq.length === 0) {
             return true;
         }
@@ -70,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
         approved = approved.filter(c => !toRemove.has(c));
     }
 
-    // ===== CALCULO DE CREDITOS =====
+    // ===== CALCULO DE CREDITOS APROBADOS =====
     function calculateApprovedCredits() {
         let total = 0;
 
@@ -85,6 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return total;
     }
 
+    // ===== CALCULO DE CREDITOS TOTALES =====
     function calculateTotalCredits() {
         let total = 0;
 
@@ -124,6 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
         grid.innerHTML = "";
 
         for (let sem = 1; sem <= 11; sem++) {
+
             if (!semesters[sem]) continue;
 
             const semDiv = document.createElement("div");
@@ -144,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         !approved.includes(course.code);
                 });
 
-                // Aprobar todos los ramos disponibles
+                // ===== APROBAR RAMOS DISPONIBLES =====
                 if (availableCourses.length > 0) {
 
                     availableCourses.forEach(course => {
@@ -155,7 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 } else {
 
-                    // Desaprobar los ramos del semestre
+                    // ===== DESAPROBAR RAMOS DEL SEMESTRE =====
                     courses.forEach(course => {
                         if (approved.includes(course.code)) {
                             removeWithDependents(course.code);
@@ -179,17 +186,24 @@ document.addEventListener("DOMContentLoaded", () => {
                 const div = document.createElement("div");
                 div.classList.add("course");
 
-                // ===== COLORES SEGUN TIPO DE RAMO =====
+                // =================================
+                // ===== COLORES POR SIGLA =====
+                // =================================
 
                 if (course.code.startsWith("MAT")) {
                     div.classList.add("mat");
                 }
 
-                if (
-                    course.code.startsWith("EIQ") ||
-                    course.code.startsWith("MET")
-                ) {
-                    div.classList.add("eie");
+                if (course.code.startsWith("EIQ")) {
+                    div.classList.add("eiq");
+                }
+
+                if (course.code.startsWith("MET")) {
+                    div.classList.add("met");
+                }
+
+                if (course.code.startsWith("ICA")) {
+                    div.classList.add("ica");
                 }
 
                 if (course.code.startsWith("QUI")) {
@@ -208,12 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     div.classList.add("fin");
                 }
 
-                if (course.code.startsWith("ICA")) {
-                    div.classList.add("eii");
-                }
-
                 if (
-                    course.code.startsWith("ICR") ||
                     course.code.startsWith("IER") ||
                     course.code.startsWith("FOFU")
                 ) {
@@ -224,12 +233,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     div.classList.add("opt");
                 }
 
+                // ===== INFORMACION DEL RAMO =====
                 div.innerHTML = `
                     <strong>${course.code}</strong><br>
                     ${course.name}<br>
                     <small>${course.credits} créditos</small>
                 `;
 
+                // ===== ESTADO DEL RAMO =====
                 const unlocked = isUnlocked(course);
 
                 if (approved.includes(course.code)) {
@@ -240,7 +251,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     div.classList.add("locked");
                 }
 
+                // =================================
                 // ===== FLECHA DE PRERREQUISITOS =====
+                // =================================
+
                 if (course.prereq && course.prereq.length > 0) {
 
                     const prereqButton = document.createElement("button");
@@ -284,6 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         prereqContainer.appendChild(prereqItem);
                     });
 
+                    // ===== ABRIR / CERRAR PRERREQUISITOS =====
                     prereqButton.addEventListener("click", (event) => {
 
                         event.stopPropagation();
@@ -304,14 +319,20 @@ document.addEventListener("DOMContentLoaded", () => {
                     div.appendChild(prereqContainer);
                 }
 
-                // ===== CLIC PARA APROBAR / DESAPROBAR =====
+                // =================================
+                // ===== APROBAR / DESAPROBAR =====
+                // =================================
+
                 if (unlocked || approved.includes(course.code)) {
 
                     div.addEventListener("click", () => {
 
                         if (approved.includes(course.code)) {
+
                             removeWithDependents(course.code);
+
                         } else {
+
                             approved.push(course.code);
                         }
 
@@ -333,5 +354,6 @@ document.addEventListener("DOMContentLoaded", () => {
         updateProgress();
     }
 
+    // ===== INICIAR MALLA =====
     render();
 });
